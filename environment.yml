@@ -1,0 +1,22 @@
+name: real-estate-ml
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+
+dependencies:
+  - python=3.8
+  - numpy
+  - pandas
+  - scikit-learn
+  - jupyter
+  - matplotlib
+  - seaborn
+  - pip
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.1
+  - pip:
+    - cookiecutter
+    - pre-commit
