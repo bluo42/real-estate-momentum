@@ -43,12 +43,6 @@ def get_last_price_on_or_before(metro_df, target_date):
 # ---------------------------------------------------------
 st.title("Real Estate Momentum Strategy Dashboard")
 
-st.markdown("""
-This dashboard showcases a momentum strategy based on the **last 1‑year momentum** of metros.
-Below, only metros with available 1‑year data are ranked by their recent momentum.
-If the `"SizeRank"` column is available, only the top 100 most populous metros are included.
-""")
-
 # Compute the 1‑year momentum for each metro.
 def compute_recent_momentum(data):
     results = []
@@ -64,7 +58,7 @@ def compute_recent_momentum(data):
         momentum = (latest_price / price_one_year_ago) - 1
         results.append({
             "Metro": metro,
-            "Recent Momentum (%)": momentum * 100,
+            "1Y Momentum (%)": momentum * 100,
             "Latest Date": latest_date,
             "Price One Year Ago": price_one_year_ago,
             "Latest Price": latest_price
@@ -78,20 +72,20 @@ else:
     summary_data = df
 
 recent_momentum_df = compute_recent_momentum(summary_data)
-recent_momentum_df = recent_momentum_df.sort_values("Recent Momentum (%)", ascending=False)
+recent_momentum_df = recent_momentum_df.sort_values("1Y Momentum (%)", ascending=False)
 
 # Display top 5 and bottom 5 metros by recent 1‑year momentum.
 top_performers = recent_momentum_df.head(5)
-bottom_performers = recent_momentum_df.sort_values("Recent Momentum (%)", ascending=True).head(5)
+bottom_performers = recent_momentum_df.sort_values("1Y Momentum (%)", ascending=True).head(5)
 
 st.header("Top and Bottom Metros by 1‑Year Momentum")
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Highest 1‑Year Momentum")
-    st.table(top_performers[["Metro", "Recent Momentum (%)"]].reset_index(drop=True))
+    st.table(top_performers[["Metro", "1Y Momentum (%)"]].reset_index(drop=True))
 with col2:
     st.subheader("Lowest 1‑Year Momentum")
-    st.table(bottom_performers[["Metro", "Recent Momentum (%)"]].reset_index(drop=True))
+    st.table(bottom_performers[["Metro", "1Y Momentum (%)"]].reset_index(drop=True))
 
 # ---------------------------------------------------------
 # Metro Drilldown Section
@@ -290,7 +284,7 @@ else:
         
         # Calculate cumulative performance from monthly forward returns.
         # Convert monthly returns (%) into multipliers, then compound.
-        cumulative = (1 + backtest_table/100).cumprod(axis=1) - 1
+        cumulative = (1 + backtest_table/100/12).cumprod(axis=1) - 1
         cumulative = cumulative * 100  # convert back to percent
         
         # Create a Plotly line chart.
