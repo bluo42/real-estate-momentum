@@ -7,7 +7,7 @@ The benchmark strategy ranks metro areas based on historical price trends over a
 
 📌 Streamlit App:
 You can access the interactive dashboard here:
-🔗 Real Estate Momentum Streamlit App
+[🔗 Real Estate Momentum Streamlit App](https://real-estate-momentum.streamlit.app/)
 
 
 ## Project Organization
