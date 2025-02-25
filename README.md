@@ -1,10 +1,14 @@
 # real-estate-momentum
 
-<a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
-    <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
-</a>
+Real Estate Momentum is a machine learning project that predicts the future total return of single-family properties in U.S. metro areas, enabling investors to select the best-performing metros for investment.
 
-Use machine learning to predict thfuture total return of single family properties in US metro areas
+The benchmark strategy ranks metro areas based on historical price trends over a selected period and goes long on the top X percentile. We enhance this approach with machine learning models, including LSTM, Logistic Regression, and Ensemble models.
+
+
+📌 Streamlit App:
+You can access the interactive dashboard here:
+🔗 Real Estate Momentum Streamlit App
+
 
 ## Project Organization
 
