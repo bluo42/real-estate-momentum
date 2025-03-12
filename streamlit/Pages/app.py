@@ -156,8 +156,9 @@ with tab1:
 with tab2:
     st.title("Historical Backtest")
     
-    # Place the form in the left half of the screen.
-    col_form, col_dummy = st.columns([1, 1])
+    # Create a layout with two columns - one for form, one for results
+    col_form, col_results = st.columns([1, 2])
+    
     with col_form:
         universe_option = st.selectbox("Select Universe", ["All", "State"])
         with st.form("backtest_form"):
@@ -278,46 +279,101 @@ with tab2:
             bench_arr = bench_arr[valid_mask]
             dates_arr = dates_arr[valid_mask]
             
-            # Compute cumulative returns (cumprod) after the loop.
+            # Create a DataFrame with returns and dates
+            returns_df = pd.DataFrame({
+                "Date": dates_arr,
+                "Top": top_arr,
+                "Universe Average": avg_arr,
+                "Benchmark": bench_arr,
+                "Bottom": bottom_arr
+            })
+            
+            # Group by year and calculate annual returns
+            returns_df["Year"] = pd.to_datetime(returns_df["Date"]).dt.year
+            annual_returns = returns_df.groupby("Year").agg({
+                "Top": lambda x: np.prod(1 + x) - 1,
+                "Universe Average": lambda x: np.prod(1 + x) - 1,
+                "Benchmark": lambda x: np.prod(1 + x) - 1,
+                "Bottom": lambda x: np.prod(1 + x) - 1
+            })
+            
+            # Calculate average annual returns
+            avg_annual_returns = pd.DataFrame({
+                "Strategy": ["Top", "Universe Average", "Benchmark", "Bottom"],
+                "Average Annual Return (%)": [
+                    annual_returns["Top"].mean() * 100,
+                    annual_returns["Universe Average"].mean() * 100,
+                    annual_returns["Benchmark"].mean() * 100,
+                    annual_returns["Bottom"].mean() * 100
+                ]
+            })
+            
+            # Compute cumulative returns
             cum_top = np.cumprod(1 + top_arr) - 1
             cum_bottom = np.cumprod(1 + bottom_arr) - 1
             cum_avg = np.cumprod(1 + avg_arr) - 1
             cum_bench = np.cumprod(1 + bench_arr) - 1
             
-            cumulative_df = pd.DataFrame({
-                "Date": dates_arr,
-                "Top": cum_top,
-                "Universe Average": cum_avg,
-                "Benchmark": cum_bench,
-                "Bottom": cum_bottom
-            })
+            # Add cumulative returns to the results dataframe
+            avg_annual_returns["Cumulative Return (%)"] = [
+                cum_top[-1] * 100,
+                cum_avg[-1] * 100,
+                cum_bench[-1] * 100,
+                cum_bottom[-1] * 100
+            ]
             
-            final_df = pd.DataFrame({
-                "Strategy": ["Top", "Universe Average", "Benchmark", "Bottom"],
-                "Cumulative Return (%)": [cum_top[-1]*100, cum_avg[-1]*100, cum_bench[-1]*100, cum_bottom[-1]*100]
-            })
-            
-            # Plot cumulative performance as a line graph.
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Top"]*100,
-                                     mode="lines+markers", name="Top"))
-            fig.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Universe Average"]*100,
-                                     mode="lines+markers", name="Universe Average"))
-            fig.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Benchmark"]*100,
-                                     mode="lines+markers", name="Benchmark"))
-            fig.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Bottom"]*100,
-                                     mode="lines+markers", name="Bottom"))
-            fig.update_layout(title="Cumulative Performance Over Time",
-                              xaxis_title="Date",
-                              yaxis_title="Cumulative Return (%)",
-                              template="plotly_white")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.plotly_chart(fig, use_container_width=True)
-            with col2:
-                st.subheader("Final Portfolio Performance")
-                st.dataframe(final_df, hide_index=True)
+            # Display results in the results column
+            with col_results:
+                # Create tabs for different visualizations
+                result_tab1, result_tab2 = st.tabs(["Annual Returns", "Cumulative Performance"])
+                
+                with result_tab1:
+                    # Plot annual returns as a bar chart
+                    fig_annual = go.Figure()
+                    for strategy in ["Top", "Universe Average", "Benchmark", "Bottom"]:
+                        fig_annual.add_trace(go.Bar(
+                            x=annual_returns.index,
+                            y=annual_returns[strategy] * 100,
+                            name=strategy
+                        ))
+                    
+                    fig_annual.update_layout(
+                        title="Annual Returns by Strategy",
+                        xaxis_title="Year",
+                        yaxis_title="Annual Return (%)",
+                        template="plotly_white",
+                        barmode="group"
+                    )
+                    st.plotly_chart(fig_annual, use_container_width=True)
+                
+                with result_tab2:
+                    # Plot cumulative performance as a line graph
+                    cumulative_df = pd.DataFrame({
+                        "Date": dates_arr,
+                        "Top": cum_top,
+                        "Universe Average": cum_avg,
+                        "Benchmark": cum_bench,
+                        "Bottom": cum_bottom
+                    })
+                    
+                    fig_cum = go.Figure()
+                    fig_cum.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Top"]*100,
+                                        mode="lines+markers", name="Top"))
+                    fig_cum.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Universe Average"]*100,
+                                        mode="lines+markers", name="Universe Average"))
+                    fig_cum.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Benchmark"]*100,
+                                        mode="lines+markers", name="Benchmark"))
+                    fig_cum.add_trace(go.Scatter(x=cumulative_df["Date"], y=cumulative_df["Bottom"]*100,
+                                        mode="lines+markers", name="Bottom"))
+                    fig_cum.update_layout(title="Cumulative Performance Over Time",
+                                    xaxis_title="Date",
+                                    yaxis_title="Cumulative Return (%)",
+                                    template="plotly_white")
+                    st.plotly_chart(fig_cum, use_container_width=True)
+                
+                # Display summary table with both annual and cumulative returns
+                st.subheader("Performance Summary")
+                st.dataframe(avg_annual_returns, hide_index=True)
 
 
 
